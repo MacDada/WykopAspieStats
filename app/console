@@ -1,0 +1,11 @@
+#!/usr/bin/env php
+<?php
+
+set_time_limit(0);
+
+if (!$loader = include __DIR__.'/../vendor/autoload.php') {
+    die('You must set up the project dependencies.');
+}
+
+(new \MacDada\Wykop\AspieStats\Application())
+    ->run();

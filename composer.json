@@ -1,0 +1,26 @@
+{
+    "name": "macdada/wykop-aspie-stats",
+    "description": "Statystyki aspergera wsrod Mirkowiczow",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dawid Nowak",
+            "email": "code@dnowak.pl"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "cilex/cilex": "~1.1.0",
+        "symfony/console": "~2.6.6",
+        "fabpot/goutte": "~2.0.3",
+        "psr/log": "1.0.0"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "~2.2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MacDada\\Wykop\\AspieStats\\": "src/"
+        }
+    }
+}
