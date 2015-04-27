@@ -31,7 +31,7 @@ class TagPageExtractor
     {
         return new Comment(
             $entry->attr('data-id'),
-            new \DateTime(),
+            new \DateTimeImmutable(),
             $entry->filter('.description a')->attr('href'),
             $this->extractUser($entry)
         );

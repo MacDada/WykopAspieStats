@@ -6,7 +6,7 @@ use PhpSpec\ObjectBehavior;
 use Symfony\Component\DomCrawler\Crawler;
 use MacDada\Wykop\AspieStats\Comment;
 use MacDada\Wykop\AspieStats\User;
-use DateTime;
+use DateTimeImmutable;
 use MacDada\Wykop\AspieStats\TagPageExtractor;
 
 class TagPageExtractorSpec extends ObjectBehavior
@@ -34,13 +34,13 @@ class TagPageExtractorSpec extends ObjectBehavior
         $comments = [
             new Comment(
                 123,
-                new DateTime(),
+                new DateTimeImmutable(),
                 'http://wykop.pl/123',
                 new User('m__b', User::GENDER_MALE, User::COLOR_BLACK)
             ),
             new Comment(
                 321,
-                new DateTime(),
+                new DateTimeImmutable(),
                 'http://wykop.pl/321',
                 new User('MacDada', User::GENDER_MALE, User::COLOR_ORANGE)
             )
