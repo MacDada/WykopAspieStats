@@ -3,10 +3,11 @@
 namespace spec\MacDada\Wykop\AspieStats;
 
 use PhpSpec\ObjectBehavior;
-use Prophecy\Argument;
 use Symfony\Component\DomCrawler\Crawler;
 use MacDada\Wykop\AspieStats\Comment;
 use MacDada\Wykop\AspieStats\User;
+use DateTime;
+use MacDada\Wykop\AspieStats\TagPageExtractor;
 
 class TagPageExtractorSpec extends ObjectBehavior
 {
@@ -28,21 +29,21 @@ class TagPageExtractorSpec extends ObjectBehavior
         $this->extract($crawler)->shouldReturn([]);
     }
 
-    function it_returns_a_found_comments()
+    function it_returns_found_comments()
     {
         $comments = [
             new Comment(
                 123,
-                new \DateTime(),
+                new DateTime(),
                 'http://wykop.pl/123',
                 new User('m__b', User::GENDER_MALE, User::COLOR_BLACK)
             ),
             // todo: zmienić dane usera
             new Comment(
                 321,
-                new \DateTime(),
+                new DateTime(),
                 'http://wykop.pl/321',
-                new User('m__b', User::GENDER_MALE, User::COLOR_BLACK)
+                new User('MacDada', User::GENDER_MALE, User::COLOR_ORANGE)
             )
         ];
 
@@ -67,12 +68,25 @@ class TagPageExtractorSpec extends ObjectBehavior
         return join('', array_map(function (Comment $comment) {
             return '
                 <li class="entry">
-                    <p class="description" data-type="entry" data-id="'.$comment->getId().'">
-                        Źródło:
-                        <a href="'.$comment->getSourceUrl().'">Some source</a>
-                    </p>
+                    <div class="dC" data-type="entry" data-id="'.$comment->getId().'">
+                        <a class="profile">
+                            <img class="avatar '.$comment->getAuthorGender().'" />
+                        </a>
+                        <a class="showProfileSummary '.$this->getAuthorColorCssClass($comment).'">
+                            <b>'.$comment->getAuthorUsername().'</b>
+                        </a>
+                        <p class="description">
+                            Źródło:
+                            <a href="'.$comment->getSourceUrl().'">Some source</a>
+                        </p>
+                    </div>
                 </li>
             ';
         }, $comments));
+    }
+
+    private function getAuthorColorCssClass(Comment $comment)
+    {
+        return array_flip(TagPageExtractor::COLORS)[$comment->getAuthorColor()];
     }
 }
