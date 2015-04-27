@@ -1,0 +1,4 @@
+suites:
+    wykop_aspie_stats_suite:
+        namespace: MacDada\Wykop\AspieStats
+        psr4_prefix: MacDada\Wykop\AspieStats
