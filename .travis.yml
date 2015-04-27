@@ -6,7 +6,7 @@ php:
     - "5.6"
     - "hhvm"
 
-# phpspec wywala się na php7:
+# phpspec has an issue with php7:
 # https://github.com/phpspec/phpspec/issues/659
 #    - nightly
 
