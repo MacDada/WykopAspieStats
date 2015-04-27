@@ -19,7 +19,6 @@ class TagPageExtractor
                 $description->attr('data-id'),
                 new \DateTime(),
                 $description->filter('a')->attr('href'),
-                // todo: tymczasowo zahardkodowane
                 new User('m__b', User::GENDER_MALE, User::COLOR_BLACK)
             );
         });
