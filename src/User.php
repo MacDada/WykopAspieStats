@@ -34,16 +34,25 @@ class User
         $this->setColor($color);
     }
 
+    /**
+     * @return string
+     */
     public function getUsername()
     {
         return $this->username;
     }
 
+    /**
+     * @return string
+     */
     public function getGender()
     {
         return $this->gender;
     }
 
+    /**
+     * @return string
+     */
     public function getColor()
     {
         return $this->color;
