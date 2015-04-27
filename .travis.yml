@@ -4,7 +4,11 @@ language: php
 php:
     - "5.5"
     - "5.6"
-    - nightly
+    - "hhvm"
+
+# phpspec wywala się na php7:
+# https://github.com/phpspec/phpspec/issues/659
+#    - nightly
 
 before_install:
     - composer --no-interaction self-update
