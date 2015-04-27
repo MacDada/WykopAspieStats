@@ -2,9 +2,11 @@
 language: php
 
 php:
-    - "5.5"
     - "5.6"
-    - "hhvm"
+
+# hhvm does not support array constants yet:
+# https://github.com/facebook/hhvm/issues/4277
+#    - "hhvm"
 
 # phpspec has an issue with php7:
 # https://github.com/phpspec/phpspec/issues/659
