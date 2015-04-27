@@ -38,7 +38,6 @@ class TagPageExtractorSpec extends ObjectBehavior
                 'http://wykop.pl/123',
                 new User('m__b', User::GENDER_MALE, User::COLOR_BLACK)
             ),
-            // todo: zmienić dane usera
             new Comment(
                 321,
                 new DateTime(),
@@ -57,6 +56,60 @@ class TagPageExtractorSpec extends ObjectBehavior
         ');
 
         $this->extract($crawler)->shouldBeLike($comments);
+    }
+
+    function it_expects_a_gender_css_class()
+    {
+        $crawler = $this->createCrawlerWithCustomGender('');
+
+        $this
+            ->shouldThrow(new \UnexpectedValueException('No gender given'))
+            ->duringExtract($crawler);
+    }
+
+    function it_expects_only_one_type_of_genders()
+    {
+        $crawler = $this->createCrawlerWithCustomGender('male female');
+
+        $this
+            ->shouldThrow(new \UnexpectedValueException('Only one gender class expected'))
+            ->duringExtract($crawler);
+    }
+
+    function it_expects_valid_gender_css_class()
+    {
+        $crawler = $this->createCrawlerWithCustomGender('male_trololo abc');
+
+        $this
+            ->shouldThrow(new \UnexpectedValueException('No gender given'))
+            ->duringExtract($crawler);
+    }
+
+    private function createCrawlerWithCustomGender($gender)
+    {
+        $crawler = new Crawler();
+        $crawler->addHtmlContent('
+            <div id="content">
+                <ul id="itemsStream">
+                    <li class="entry">
+                        <div class="dC" data-type="entry" data-id="123">
+                            <a class="profile">
+                                <img class="avatar '.$gender.'" />
+                            </a>
+                            <a class="showProfileSummary color-0">
+                                <b>m__b</b>
+                            </a>
+                            <p class="description">
+                                Źródło:
+                                <a href="#">Some source</a>
+                            </p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        ');
+
+        return $crawler;
     }
 
     /**

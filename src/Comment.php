@@ -37,21 +37,33 @@ class Comment
         return $this->createdAt;
     }
 
+    /**
+     * @return string
+     */
     public function getSourceUrl()
     {
         return $this->sourceUrl;
     }
 
+    /**
+     * @return string
+     */
     public function getAuthorUsername()
     {
         return $this->author->getUsername();
     }
 
+    /**
+     * @return string
+     */
     public function getAuthorGender()
     {
         return $this->author->getGender();
     }
 
+    /**
+     * @return string
+     */
     public function getAuthorColor()
     {
         return $this->author->getColor();

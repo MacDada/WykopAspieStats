@@ -3,6 +3,7 @@
 namespace MacDada\Wykop\AspieStats;
 
 use Symfony\Component\DomCrawler\Crawler;
+use UnexpectedValueException;
 
 class TagPageExtractor
 {
@@ -15,6 +16,7 @@ class TagPageExtractor
     /**
      * @param Crawler $pageCrawler
      * @return Comment[]
+     * @throws UnexpectedValueException
      */
     public function extract(Crawler $pageCrawler)
     {
@@ -50,13 +52,24 @@ class TagPageExtractor
     {
         $avatarImg = $entry->filter('a.profile img.avatar');
 
-        if (false !== strpos($avatarImg->attr('class'), 'male')) {
+        $cssClasses = explode(' ', $avatarImg->attr('class'));
+
+        $isMale = in_array('male', $cssClasses);
+        $isFemale = in_array('female', $cssClasses);
+
+        if ($isMale && $isFemale) {
+            throw new UnexpectedValueException('Only one gender class expected');
+        }
+
+        if ($isMale) {
             return User::GENDER_MALE;
         }
 
-        if (false !== strpos($avatarImg->attr('class'), 'female')) {
+        if ($isFemale) {
             return User::GENDER_FEMALE;
         }
+
+        throw new UnexpectedValueException('No gender given');
     }
 
     private function extractColor(Crawler $showProfileSummary)
