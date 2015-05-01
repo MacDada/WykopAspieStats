@@ -84,10 +84,24 @@ class TagPageExtractor
 
     private function extractColor(Crawler $showProfileSummary)
     {
+        $found = [];
+
+        $cssClasses = explode(' ', $showProfileSummary->attr('class'));
+
         foreach (static::COLORS as $colorClass => $colorValue) {
-            if (false !== strpos($showProfileSummary->attr('class'), $colorClass)) {
-                return $colorValue;
+            if (in_array($colorClass, $cssClasses)) {
+                $found[] = $colorValue;
             }
         }
+
+        if (!$found) {
+            throw new UnexpectedValueException('No user color given');
+        }
+
+        if (count($found) > 1) {
+            throw new UnexpectedValueException('Only one user color class expected');
+        }
+
+        return $found[0];
     }
 }

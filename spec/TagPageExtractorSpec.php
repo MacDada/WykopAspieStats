@@ -85,6 +85,33 @@ class TagPageExtractorSpec extends ObjectBehavior
             ->duringExtract($crawler);
     }
 
+    function it_expects_a_user_color_class()
+    {
+        $crawler = $this->createCrawlerWithCustomUserColorClass('');
+
+        $this
+            ->shouldThrow(new \UnexpectedValueException('No user color given'))
+            ->duringExtract($crawler);
+    }
+
+    function it_expects_only_one_type_of_colors()
+    {
+        $crawler = $this->createCrawlerWithCustomUserColorClass('color-0 color-1');
+
+        $this
+            ->shouldThrow(new \UnexpectedValueException('Only one user color class expected'))
+            ->duringExtract($crawler);
+    }
+
+    function it_expects_valid_user_color_css_class()
+    {
+        $crawler = $this->createCrawlerWithCustomUserColorClass('ddcolor-0');
+
+        $this
+            ->shouldThrow(new \UnexpectedValueException('No user color given'))
+            ->duringExtract($crawler);
+    }
+
     function it_extracts_created_at_date()
     {
         $createdAt = new DateTimeImmutable('2015-04-27T22:42:53+02:00');
@@ -129,6 +156,34 @@ class TagPageExtractorSpec extends ObjectBehavior
                                 <img class="avatar '.$gender.'" />
                             </a>
                             <a class="showProfileSummary color-0">
+                                <b>m__b</b>
+                            </a>
+                            <time datetime="2015-04-27T22:42:53+02:00" pubdate />
+                            <p class="description">
+                                Źródło:
+                                <a href="#">Some source</a>
+                            </p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        ');
+
+        return $crawler;
+    }
+
+    private function createCrawlerWithCustomUserColorClass($color)
+    {
+        $crawler = new Crawler();
+        $crawler->addHtmlContent('
+            <div id="content">
+                <ul id="itemsStream">
+                    <li class="entry">
+                        <div class="dC" data-type="entry" data-id="123">
+                            <a class="profile">
+                                <img class="avatar male" />
+                            </a>
+                            <a class="showProfileSummary '.$color.'">
                                 <b>m__b</b>
                             </a>
                             <time datetime="2015-04-27T22:42:53+02:00" pubdate />
