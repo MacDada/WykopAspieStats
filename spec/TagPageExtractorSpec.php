@@ -55,7 +55,10 @@ class TagPageExtractorSpec extends ObjectBehavior
             </div>
         ');
 
-        $this->extract($crawler)->shouldBeLike($comments);
+        $foundComments = $this->extract($crawler);
+
+        $foundComments->shouldHaveCount(2);
+        $foundComments->shouldBeLike($comments);
     }
 
     function it_expects_a_gender_css_class()
@@ -134,14 +137,16 @@ class TagPageExtractorSpec extends ObjectBehavior
                                 <a href="#">Some source</a>
                             </p>
                         </div>
+                        '.$this->renderSubcomments().'
                     </li>
                 </ul>
             </div>
         ');
 
-        $this->extract($crawler)[0]
-            ->getCreatedAt()
-            ->shouldBeLike($createdAt);
+        $foundComments = $this->extract($crawler);
+
+        $foundComments->shouldHaveCount(1);
+        $foundComments[0]->getCreatedAt()->shouldBeLike($createdAt);
     }
 
     private function createCrawlerWithCustomGender($gender)
@@ -164,6 +169,7 @@ class TagPageExtractorSpec extends ObjectBehavior
                                 <a href="#">Some source</a>
                             </p>
                         </div>
+                        '.$this->renderSubcomments().'
                     </li>
                 </ul>
             </div>
@@ -192,6 +198,7 @@ class TagPageExtractorSpec extends ObjectBehavior
                                 <a href="#">Some source</a>
                             </p>
                         </div>
+                        '.$this->renderSubcomments().'
                     </li>
                 </ul>
             </div>
@@ -222,9 +229,33 @@ class TagPageExtractorSpec extends ObjectBehavior
                             <a href="'.$comment->getSourceUrl().'">Some source</a>
                         </p>
                     </div>
+                    '.$this->renderSubcomments().'
                 </li>
             ';
         }, $comments));
+    }
+
+    private function renderSubcomments()
+    {
+        return '
+            <ul class="sub">
+                <li>
+                    <div class="dC" data-type="entrycomment" data-id="12345">
+                        <a class="profile">
+                             <img class="avatar male" />
+                        </a>
+                        <a class="showProfileSummary color-1">
+                            <b>m__b</b>
+                        </a>
+                        <time datetime="2015-04-27T22:42:53+02:00" pubdate />
+                        <p class="description">
+                            Źródło:
+                            <a href="#">Some source</a>
+                        </p>
+                    </div>
+                </li>
+            </ul>
+        ';
     }
 
     private function getAuthorColorCssClass(Comment $comment)
