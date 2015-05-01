@@ -8,9 +8,15 @@ use MacDada\Wykop\AspieStats\Comment;
 use MacDada\Wykop\AspieStats\User;
 use DateTimeImmutable;
 use MacDada\Wykop\AspieStats\TagPageExtractor;
+use Psr\Log\LoggerInterface;
 
 class TagPageExtractorSpec extends ObjectBehavior
 {
+    function let(LoggerInterface $logger)
+    {
+        $this->beConstructedWith($logger);
+    }
+
     function it_is_initializable()
     {
         $this->shouldHaveType('MacDada\Wykop\AspieStats\TagPageExtractor');
@@ -115,7 +121,7 @@ class TagPageExtractorSpec extends ObjectBehavior
             ->duringExtract($crawler);
     }
 
-    function it_skips_comments_without_source()
+    function it_skips_and_logs_comments_without_source(LoggerInterface $logger)
     {
         $crawler = new Crawler();
         $crawler->addHtmlContent('
@@ -157,6 +163,13 @@ class TagPageExtractorSpec extends ObjectBehavior
                 </ul>
             </div>
         ');
+
+        $logger
+            ->info(
+                'TagPageExtractor: skipping comment without source',
+                ['commentId' => 100]
+            )
+            ->shouldBeCalled();
 
         $foundComments = $this->extract($crawler);
 

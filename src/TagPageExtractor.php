@@ -4,6 +4,7 @@ namespace MacDada\Wykop\AspieStats;
 
 use Symfony\Component\DomCrawler\Crawler;
 use UnexpectedValueException;
+use Psr\Log\LoggerInterface;
 
 class TagPageExtractor
 {
@@ -15,6 +16,19 @@ class TagPageExtractor
         'color-1' => User::COLOR_ORANGE,
         'color-0' => User::COLOR_GREEN,
     ];
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
 
     /**
      * @param Crawler $pageCrawler
@@ -44,23 +58,31 @@ class TagPageExtractor
      */
     private function extractComment(Crawler $entry)
     {
-        $description = $this->source($entry);
+        $sourceUrl = $this->sourceUrl($entry);
+        $commentId = (int) $entry->attr('data-id');
 
-        return null === $description
-            ? null
-            : new Comment(
-                $entry->attr('data-id'),
-                $this->extractCreatedAtDate($entry),
-                $description,
-                $this->extractUser($entry)
+        if (null === $sourceUrl) {
+            $this->logger->info(
+                'TagPageExtractor: skipping comment without source',
+                ['commentId' => $commentId]
             );
+
+            return null;
+        }
+
+        return new Comment(
+            $commentId,
+            $this->extractCreatedAtDate($entry),
+            $sourceUrl,
+            $this->extractUser($entry)
+        );
     }
 
     /**
      * @param Crawler $entry
      * @return string|null
      */
-    private function source(Crawler $entry)
+    private function sourceUrl(Crawler $entry)
     {
         $sourceLink = $entry->filter('.description a');
 
