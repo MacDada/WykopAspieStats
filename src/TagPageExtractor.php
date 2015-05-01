@@ -94,7 +94,7 @@ class TagPageExtractor
             }
         }
 
-        if (!$found) {
+        if (empty($found)) {
             throw new UnexpectedValueException('No user color given');
         }
 
