@@ -9,6 +9,9 @@ class TagPageExtractor
 {
     const COLORS = [
         'color-5' => User::COLOR_BLACK,
+        'color-2001' => User::COLOR_BLUE,
+        'color-1001' => User::COLOR_SILVER,
+        'color-2' => User::COLOR_MAROON,
         'color-1' => User::COLOR_ORANGE,
         'color-0' => User::COLOR_GREEN,
     ];
