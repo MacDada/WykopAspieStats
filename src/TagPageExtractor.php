@@ -31,9 +31,16 @@ class TagPageExtractor
     {
         return new Comment(
             $entry->attr('data-id'),
-            new \DateTimeImmutable(),
+            $this->extractCreatedAtDate($entry),
             $entry->filter('.description a')->attr('href'),
             $this->extractUser($entry)
+        );
+    }
+
+    private function extractCreatedAtDate(Crawler $entry)
+    {
+        return new \DateTimeImmutable(
+            $entry->filter('time[pubdate]')->attr('datetime')
         );
     }
 

@@ -34,13 +34,13 @@ class TagPageExtractorSpec extends ObjectBehavior
         $comments = [
             new Comment(
                 123,
-                new DateTimeImmutable(),
+                new DateTimeImmutable('-1 h'),
                 'http://wykop.pl/123',
                 new User('m__b', User::GENDER_MALE, User::COLOR_BLACK)
             ),
             new Comment(
                 321,
-                new DateTimeImmutable(),
+                new DateTimeImmutable('2015-02-03T21:22:23+02:00'),
                 'http://wykop.pl/321',
                 new User('MacDada', User::GENDER_MALE, User::COLOR_ORANGE)
             )
@@ -85,6 +85,38 @@ class TagPageExtractorSpec extends ObjectBehavior
             ->duringExtract($crawler);
     }
 
+    function it_extracts_created_at_date()
+    {
+        $createdAt = new DateTimeImmutable('2015-04-27T22:42:53+02:00');
+
+        $crawler = new Crawler();
+        $crawler->addHtmlContent('
+            <div id="content">
+                <ul id="itemsStream">
+                    <li class="entry">
+                        <div class="dC" data-type="entry" data-id="123">
+                            <a class="profile">
+                                <img class="avatar male" />
+                            </a>
+                            <a class="showProfileSummary color-0">
+                                <b>m__b</b>
+                            </a>
+                            <time datetime="'.$createdAt->format(DATE_W3C).'" pubdate />
+                            <p class="description">
+                                Źródło:
+                                <a href="#">Some source</a>
+                            </p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        ');
+
+        $this->extract($crawler)[0]
+            ->getCreatedAt()
+            ->shouldBeLike($createdAt);
+    }
+
     private function createCrawlerWithCustomGender($gender)
     {
         $crawler = new Crawler();
@@ -99,6 +131,7 @@ class TagPageExtractorSpec extends ObjectBehavior
                             <a class="showProfileSummary color-0">
                                 <b>m__b</b>
                             </a>
+                            <time datetime="2015-04-27T22:42:53+02:00" pubdate />
                             <p class="description">
                                 Źródło:
                                 <a href="#">Some source</a>
@@ -128,6 +161,7 @@ class TagPageExtractorSpec extends ObjectBehavior
                         <a class="showProfileSummary '.$this->getAuthorColorCssClass($comment).'">
                             <b>'.$comment->getAuthorUsername().'</b>
                         </a>
+                        <time datetime="'.$comment->getCreatedAt()->format(DATE_W3C).'" pubdate />
                         <p class="description">
                             Źródło:
                             <a href="'.$comment->getSourceUrl().'">Some source</a>
