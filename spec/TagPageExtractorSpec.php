@@ -6,11 +6,17 @@ use PhpSpec\ObjectBehavior;
 use Symfony\Component\DomCrawler\Crawler;
 use MacDada\Wykop\AspieStats\Comment;
 use MacDada\Wykop\AspieStats\User;
-use DateTime;
+use DateTimeImmutable;
 use MacDada\Wykop\AspieStats\TagPageExtractor;
+use Psr\Log\LoggerInterface;
 
 class TagPageExtractorSpec extends ObjectBehavior
 {
+    function let(LoggerInterface $logger)
+    {
+        $this->beConstructedWith($logger);
+    }
+
     function it_is_initializable()
     {
         $this->shouldHaveType('MacDada\Wykop\AspieStats\TagPageExtractor');
@@ -34,13 +40,13 @@ class TagPageExtractorSpec extends ObjectBehavior
         $comments = [
             new Comment(
                 123,
-                new DateTime(),
+                new DateTimeImmutable('-1 h'),
                 'http://wykop.pl/123',
                 new User('m__b', User::GENDER_MALE, User::COLOR_BLACK)
             ),
             new Comment(
                 321,
-                new DateTime(),
+                new DateTimeImmutable('2015-02-03T21:22:23+02:00'),
                 'http://wykop.pl/321',
                 new User('MacDada', User::GENDER_MALE, User::COLOR_ORANGE)
             )
@@ -55,7 +61,10 @@ class TagPageExtractorSpec extends ObjectBehavior
             </div>
         ');
 
-        $this->extract($crawler)->shouldBeLike($comments);
+        $foundComments = $this->extract($crawler);
+
+        $foundComments->shouldHaveCount(2);
+        $foundComments->shouldBeLike($comments);
     }
 
     function it_expects_a_gender_css_class()
@@ -85,6 +94,125 @@ class TagPageExtractorSpec extends ObjectBehavior
             ->duringExtract($crawler);
     }
 
+    function it_expects_a_user_color_class()
+    {
+        $crawler = $this->createCrawlerWithCustomUserColorClass('');
+
+        $this
+            ->shouldThrow(new \UnexpectedValueException('No user color given'))
+            ->duringExtract($crawler);
+    }
+
+    function it_expects_only_one_type_of_colors()
+    {
+        $crawler = $this->createCrawlerWithCustomUserColorClass('color-0 color-1');
+
+        $this
+            ->shouldThrow(new \UnexpectedValueException('Only one user color class expected'))
+            ->duringExtract($crawler);
+    }
+
+    function it_expects_valid_user_color_css_class()
+    {
+        $crawler = $this->createCrawlerWithCustomUserColorClass('ddcolor-0');
+
+        $this
+            ->shouldThrow(new \UnexpectedValueException('No user color given'))
+            ->duringExtract($crawler);
+    }
+
+    function it_skips_and_logs_comments_without_source(LoggerInterface $logger)
+    {
+        $crawler = new Crawler();
+        $crawler->addHtmlContent('
+            <div id="content">
+                <ul id="itemsStream">
+
+                    <!-- comment without source -->
+                    <li class="entry">
+                        <div class="dC" data-type="entry" data-id="100">
+                            <a class="profile">
+                                <img class="avatar male" />
+                            </a>
+                            <a class="showProfileSummary color-0">
+                                <b>m__b</b>
+                            </a>
+                            <time datetime="2015-04-27T22:42:53+02:00" pubdate />
+                        </div>
+                        '.$this->renderSubcomments().'
+                    </li>
+
+                    <!-- comment with source -->
+                    <li class="entry">
+                        <div class="dC" data-type="entry" data-id="200">
+                            <a class="profile">
+                                <img class="avatar male" />
+                            </a>
+                            <a class="showProfileSummary color-0">
+                                <b>m__b</b>
+                            </a>
+                            <time datetime="2015-04-27T22:42:53+02:00" pubdate />
+                            <p class="description">
+                                Źródło:
+                                <a href="#">Some source</a>
+                            </p>
+                        </div>
+                        '.$this->renderSubcomments().'
+                    </li>
+
+                </ul>
+            </div>
+        ');
+
+        $logger
+            ->info(
+                'TagPageExtractor: skipping comment without source',
+                ['commentId' => 100]
+            )
+            ->shouldBeCalled();
+
+        $foundComments = $this->extract($crawler);
+
+        $foundComments->shouldHaveCount(1);
+        $foundComments[0]->shouldHaveType(Comment::class);
+        $foundComments[0]->getId()->shouldReturn(200);
+    }
+
+    function it_extracts_created_at_date()
+    {
+        $createdAt = new DateTimeImmutable('2015-04-27T22:42:53+02:00');
+
+        $crawler = new Crawler();
+        $crawler->addHtmlContent('
+            <div id="content">
+                <ul id="itemsStream">
+                    <li class="entry">
+                        <div class="dC" data-type="entry" data-id="123">
+                            <a class="profile">
+                                <img class="avatar male" />
+                            </a>
+                            <a class="showProfileSummary color-0">
+                                <b>m__b</b>
+                            </a>
+                            <time datetime="'.$createdAt->format(DATE_W3C).'" pubdate />
+                            <p class="description">
+                                Źródło:
+                                <a href="#">Some source</a>
+                            </p>
+                        </div>
+                        '.$this->renderSubcomments().'
+                    </li>
+                </ul>
+            </div>
+        ');
+
+        $foundComments = $this->extract($crawler);
+
+        $foundComments->shouldHaveCount(1);
+        $foundComments[0]->shouldHaveType(Comment::class);
+        $foundComments[0]->getCreatedAt()->shouldBeLike($createdAt);
+    }
+
     private function createCrawlerWithCustomGender($gender)
     {
         $crawler = new Crawler();
@@ -99,11 +227,42 @@ class TagPageExtractorSpec extends ObjectBehavior
                             <a class="showProfileSummary color-0">
                                 <b>m__b</b>
                             </a>
+                            <time datetime="2015-04-27T22:42:53+02:00" pubdate />
                             <p class="description">
                                 Źródło:
                                 <a href="#">Some source</a>
                             </p>
                         </div>
+                        '.$this->renderSubcomments().'
+                    </li>
+                </ul>
+            </div>
+        ');
+
+        return $crawler;
+    }
+
+    private function createCrawlerWithCustomUserColorClass($color)
+    {
+        $crawler = new Crawler();
+        $crawler->addHtmlContent('
+            <div id="content">
+                <ul id="itemsStream">
+                    <li class="entry">
+                        <div class="dC" data-type="entry" data-id="123">
+                            <a class="profile">
+                                <img class="avatar male" />
+                            </a>
+                            <a class="showProfileSummary '.$color.'">
+                                <b>m__b</b>
+                            </a>
+                            <time datetime="2015-04-27T22:42:53+02:00" pubdate />
+                            <p class="description">
+                                Źródło:
+                                <a href="#">Some source</a>
+                            </p>
+                        </div>
+                        '.$this->renderSubcomments().'
                     </li>
                 </ul>
             </div>
@@ -128,14 +287,39 @@ class TagPageExtractorSpec extends ObjectBehavior
                         <a class="showProfileSummary '.$this->getAuthorColorCssClass($comment).'">
                             <b>'.$comment->getAuthorUsername().'</b>
                         </a>
+                        <time datetime="'.$comment->getCreatedAt()->format(DATE_W3C).'" pubdate />
                         <p class="description">
                             Źródło:
                             <a href="'.$comment->getSourceUrl().'">Some source</a>
                         </p>
                     </div>
+                    '.$this->renderSubcomments().'
                 </li>
             ';
         }, $comments));
+    }
+
+    private function renderSubcomments()
+    {
+        return '
+            <ul class="sub">
+                <li>
+                    <div class="dC" data-type="entrycomment" data-id="12345">
+                        <a class="profile">
+                             <img class="avatar male" />
+                        </a>
+                        <a class="showProfileSummary color-1">
+                            <b>m__b</b>
+                        </a>
+                        <time datetime="2015-04-27T22:42:53+02:00" pubdate />
+                        <p class="description">
+                            Źródło:
+                            <a href="#">Some source</a>
+                        </p>
+                    </div>
+                </li>
+            </ul>
+        ';
     }
 
     private function getAuthorColorCssClass(Comment $comment)

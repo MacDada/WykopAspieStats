@@ -1,3 +1,5 @@
+bootstrap: spec/bootstrap.php
+
 suites:
     wykop_aspie_stats_suite:
         namespace: MacDada\Wykop\AspieStats

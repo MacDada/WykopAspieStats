@@ -9,7 +9,7 @@ class Comment
     private $sourceUrl;
     private $author;
 
-    public function __construct($id, \DateTime $createdAt, $sourceUrl, User $author)
+    public function __construct($id, \DateTimeImmutable $createdAt, $sourceUrl, User $author)
     {
         if (empty($sourceUrl)) {
             throw new \InvalidArgumentException('Empty source url');
@@ -30,7 +30,7 @@ class Comment
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTimeImmutable
      */
     public function getCreatedAt()
     {

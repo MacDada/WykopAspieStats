@@ -5,13 +5,13 @@ namespace spec\MacDada\Wykop\AspieStats;
 use PhpSpec\ObjectBehavior;
 use MacDada\Wykop\AspieStats\Comment;
 use MacDada\Wykop\AspieStats\User;
-use DateTime;
+use DateTimeImmutable;
 
 class CommentSpec extends ObjectBehavior
 {
     function it_is_initializable(User $user)
     {
-        $this->beConstructedWith(1, new DateTime(), 'http://wykop.pl', $user);
+        $this->beConstructedWith(1, new DateTimeImmutable(), 'http://wykop.pl', $user);
 
         $this->shouldHaveType('MacDada\Wykop\AspieStats\Comment');
     }
@@ -20,10 +20,10 @@ class CommentSpec extends ObjectBehavior
     {
         $this
             ->shouldThrow('InvalidArgumentException')
-            ->during__construct(1, new DateTime(), '', $user);
+            ->during__construct(1, new DateTimeImmutable(), '', $user);
     }
 
-    function it_returns_its_data(DateTime $createdAt)
+    function it_returns_its_data(DateTimeImmutable $createdAt)
     {
         $author = new User('m__b', User::GENDER_MALE, User::COLOR_BLACK);
 
@@ -40,7 +40,7 @@ class CommentSpec extends ObjectBehavior
 
     function it_might_be_equal_to_other_comment()
     {
-        $createdAt1 = new DateTime();
+        $createdAt1 = new DateTimeImmutable();
         $createdAt2 = clone $createdAt1;
         $author1 = new User('m__b', User::GENDER_MALE, User::COLOR_BLACK);
         $author2 = new User('m__b', User::GENDER_MALE, User::COLOR_BLACK);
@@ -53,7 +53,7 @@ class CommentSpec extends ObjectBehavior
 
     function it_might_not_be_equal_to_other_comment()
     {
-        $createdAt1 = new DateTime();
+        $createdAt1 = new DateTimeImmutable();
         $createdAt2 = clone $createdAt1;
         $author1 = new User('m__b', User::GENDER_MALE, User::COLOR_BLACK);
         $author2 = new User('MacDada', User::GENDER_MALE, User::COLOR_BLACK);

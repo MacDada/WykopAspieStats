@@ -4,14 +4,31 @@ namespace MacDada\Wykop\AspieStats;
 
 use Symfony\Component\DomCrawler\Crawler;
 use UnexpectedValueException;
+use Psr\Log\LoggerInterface;
 
 class TagPageExtractor
 {
     const COLORS = [
         'color-5' => User::COLOR_BLACK,
+        'color-2001' => User::COLOR_BLUE,
+        'color-1001' => User::COLOR_SILVER,
+        'color-2' => User::COLOR_MAROON,
         'color-1' => User::COLOR_ORANGE,
         'color-0' => User::COLOR_GREEN,
     ];
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
 
     /**
      * @param Crawler $pageCrawler
@@ -22,18 +39,60 @@ class TagPageExtractor
     {
         $entryCrawler = $pageCrawler->filter('#itemsStream .entry div.dC[data-type="entry"]');
 
-        return $entryCrawler->each(function (Crawler $entry) {
-            return $this->extractComment($entry);
+        $found = [];
+
+        $entryCrawler->each(function (Crawler $entry) use (&$found) {
+            $comment = $this->extractComment($entry);
+
+            if (null !== $comment) {
+                $found[] = $comment;
+            }
         });
+
+        return $found;
     }
 
+    /**
+     * @param Crawler $entry
+     * @return Comment|null
+     */
     private function extractComment(Crawler $entry)
     {
+        $sourceUrl = $this->sourceUrl($entry);
+        $commentId = (int) $entry->attr('data-id');
+
+        if (null === $sourceUrl) {
+            $this->logger->info(
+                'TagPageExtractor: skipping comment without source',
+                ['commentId' => $commentId]
+            );
+
+            return null;
+        }
+
         return new Comment(
-            $entry->attr('data-id'),
-            new \DateTime(),
-            $entry->filter('.description a')->attr('href'),
+            $commentId,
+            $this->extractCreatedAtDate($entry),
+            $sourceUrl,
             $this->extractUser($entry)
+        );
+    }
+
+    /**
+     * @param Crawler $entry
+     * @return string|null
+     */
+    private function sourceUrl(Crawler $entry)
+    {
+        $sourceLink = $entry->filter('.description a');
+
+        return $sourceLink->count() ? $sourceLink->attr('href') : null;
+    }
+
+    private function extractCreatedAtDate(Crawler $entry)
+    {
+        return new \DateTimeImmutable(
+            $entry->filter('time[pubdate]')->attr('datetime')
         );
     }
 
@@ -74,10 +133,24 @@ class TagPageExtractor
 
     private function extractColor(Crawler $showProfileSummary)
     {
+        $found = [];
+
+        $cssClasses = explode(' ', $showProfileSummary->attr('class'));
+
         foreach (static::COLORS as $colorClass => $colorValue) {
-            if (false !== strpos($showProfileSummary->attr('class'), $colorClass)) {
-                return $colorValue;
+            if (in_array($colorClass, $cssClasses)) {
+                $found[] = $colorValue;
             }
         }
+
+        if (empty($found)) {
+            throw new UnexpectedValueException('No user color given');
+        }
+
+        if (count($found) > 1) {
+            throw new UnexpectedValueException('Only one user color class expected');
+        }
+
+        return $found[0];
     }
 }
