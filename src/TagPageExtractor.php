@@ -89,6 +89,10 @@ class TagPageExtractor
         return $sourceLink->count() ? $sourceLink->attr('href') : null;
     }
 
+    /**
+     * @param Crawler $entry
+     * @return \DateTimeImmutable
+     */
     private function extractCreatedAtDate(Crawler $entry)
     {
         return new \DateTimeImmutable(
@@ -96,6 +100,10 @@ class TagPageExtractor
         );
     }
 
+    /**
+     * @param Crawler $entry
+     * @return User
+     */
     private function extractUser(Crawler $entry)
     {
         $showProfileSummary = $entry->filter('.showProfileSummary');
@@ -107,6 +115,11 @@ class TagPageExtractor
         );
     }
 
+    /**
+     * @param Crawler $entry
+     * @return string
+     * @throws UnexpectedValueException
+     */
     private function extractGender(Crawler $entry)
     {
         $avatarImg = $entry->filter('a.profile img.avatar');
@@ -131,6 +144,11 @@ class TagPageExtractor
         throw new UnexpectedValueException('No gender given');
     }
 
+    /**
+     * @param Crawler $showProfileSummary
+     * @return string
+     * @throws UnexpectedValueException
+     */
     private function extractColor(Crawler $showProfileSummary)
     {
         $found = [];
