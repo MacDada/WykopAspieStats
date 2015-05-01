@@ -11,10 +11,6 @@ class Comment
 
     public function __construct($id, \DateTimeImmutable $createdAt, $sourceUrl, User $author)
     {
-        if (empty($sourceUrl)) {
-            throw new \InvalidArgumentException('Empty source url');
-        }
-
         $this->id = (int) $id;
         $this->createdAt = $createdAt;
         $this->sourceUrl = (string) $sourceUrl;

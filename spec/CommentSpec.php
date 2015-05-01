@@ -16,13 +16,6 @@ class CommentSpec extends ObjectBehavior
         $this->shouldHaveType('MacDada\Wykop\AspieStats\Comment');
     }
 
-    function it_throws_exception_on_empty_source_url(User $user)
-    {
-        $this
-            ->shouldThrow('InvalidArgumentException')
-            ->during__construct(1, new DateTimeImmutable(), '', $user);
-    }
-
     function it_returns_its_data(DateTimeImmutable $createdAt)
     {
         $author = new User('m__b', User::GENDER_MALE, User::COLOR_BLACK);
