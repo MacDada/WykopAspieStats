@@ -115,6 +115,56 @@ class TagPageExtractorSpec extends ObjectBehavior
             ->duringExtract($crawler);
     }
 
+    function it_skips_comments_without_source()
+    {
+        $crawler = new Crawler();
+        $crawler->addHtmlContent('
+            <div id="content">
+                <ul id="itemsStream">
+
+                    <!-- comment without source -->
+                    <li class="entry">
+                        <div class="dC" data-type="entry" data-id="100">
+                            <a class="profile">
+                                <img class="avatar male" />
+                            </a>
+                            <a class="showProfileSummary color-0">
+                                <b>m__b</b>
+                            </a>
+                            <time datetime="2015-04-27T22:42:53+02:00" pubdate />
+                        </div>
+                        '.$this->renderSubcomments().'
+                    </li>
+
+                    <!-- comment with source -->
+                    <li class="entry">
+                        <div class="dC" data-type="entry" data-id="200">
+                            <a class="profile">
+                                <img class="avatar male" />
+                            </a>
+                            <a class="showProfileSummary color-0">
+                                <b>m__b</b>
+                            </a>
+                            <time datetime="2015-04-27T22:42:53+02:00" pubdate />
+                            <p class="description">
+                                Źródło:
+                                <a href="#">Some source</a>
+                            </p>
+                        </div>
+                        '.$this->renderSubcomments().'
+                    </li>
+
+                </ul>
+            </div>
+        ');
+
+        $foundComments = $this->extract($crawler);
+
+        $foundComments->shouldHaveCount(1);
+        $foundComments[0]->shouldHaveType(Comment::class);
+        $foundComments[0]->getId()->shouldReturn(200);
+    }
+
     function it_extracts_created_at_date()
     {
         $createdAt = new DateTimeImmutable('2015-04-27T22:42:53+02:00');
@@ -146,6 +196,7 @@ class TagPageExtractorSpec extends ObjectBehavior
         $foundComments = $this->extract($crawler);
 
         $foundComments->shouldHaveCount(1);
+        $foundComments[0]->shouldHaveType(Comment::class);
         $foundComments[0]->getCreatedAt()->shouldBeLike($createdAt);
     }
 

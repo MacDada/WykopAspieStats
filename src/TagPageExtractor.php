@@ -25,19 +25,46 @@ class TagPageExtractor
     {
         $entryCrawler = $pageCrawler->filter('#itemsStream .entry div.dC[data-type="entry"]');
 
-        return $entryCrawler->each(function (Crawler $entry) {
-            return $this->extractComment($entry);
+        $found = [];
+
+        $entryCrawler->each(function (Crawler $entry) use (&$found) {
+            $comment = $this->extractComment($entry);
+
+            if (null !== $comment) {
+                $found[] = $comment;
+            }
         });
+
+        return $found;
     }
 
+    /**
+     * @param Crawler $entry
+     * @return Comment|null
+     */
     private function extractComment(Crawler $entry)
     {
-        return new Comment(
-            $entry->attr('data-id'),
-            $this->extractCreatedAtDate($entry),
-            $entry->filter('.description a')->attr('href'),
-            $this->extractUser($entry)
-        );
+        $description = $this->source($entry);
+
+        return null === $description
+            ? null
+            : new Comment(
+                $entry->attr('data-id'),
+                $this->extractCreatedAtDate($entry),
+                $description,
+                $this->extractUser($entry)
+            );
+    }
+
+    /**
+     * @param Crawler $entry
+     * @return string|null
+     */
+    private function source(Crawler $entry)
+    {
+        $sourceLink = $entry->filter('.description a');
+
+        return $sourceLink->count() ? $sourceLink->attr('href') : null;
     }
 
     private function extractCreatedAtDate(Crawler $entry)
